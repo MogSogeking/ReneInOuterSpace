@@ -37,6 +37,7 @@ let bonusEvent;
 let spawnCount = 1;
 let particles;
 let slots;
+let itemImages;
 
 function preload() {
   this.load.image('rene', 'assets/rene.png');
@@ -78,6 +79,9 @@ function create() {
       stepX: 160,
     }
   });
+
+  slots.setDepth(1);
+  itemImages.setDepth(1);
 
   spaceCollapse = this.physics.add.image(22, 300, 'spaceCollapse')
     .setImmovable()
