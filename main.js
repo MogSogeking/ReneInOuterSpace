@@ -5,7 +5,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      debug: true,
+      // debug: true,
       gravity: { x: -200 }
     },
   },
@@ -28,17 +28,23 @@ let spaceCollapse;
 let delay = 5000;
 let spawnEvent;
 let spawnCount = 1;
+let particles;
 
 function preload() {
   this.load.image('rene', 'assets/rene.png');
   this.load.image('meteor', 'assets/meteor.png');
   this.load.image('space_collapse', 'assets/space_collapse.png');
+  this.load.image('star', 'assets/star.png');
 }
 
 function create() {
   keys = this.input.keyboard.addKeys('Z,Q,S,D,SPACE');
   this.physics.world.checkCollision.left = false;
   this.physics.world.checkCollision.right = false;
+
+  particles = this.physics.add.group({ key: 'star', repeat: 80 });
+  particles.children.iterate(createParticles, this);
+
 
   spaceCollapse = this.physics.add.image(22, 300, 'space_collapse')
     .setImmovable()
@@ -63,6 +69,7 @@ function create() {
 
 function update() {
   movingRene();
+  this.physics.world.wrap(particles.getChildren());
 }
 
 function setReneConfig() {
@@ -106,10 +113,8 @@ function spawnObjects() {
     .setCollideWorldBounds(true)
     .setImmovable()
     .setScale(randomScale, randomScale);
-  meteor.body.setGravityX(-5);
 
   meteors.push(meteor);
-
 
   this.physics.add.collider(rene, meteor);
   spawnEvent = this.time.addEvent({
@@ -119,4 +124,20 @@ function spawnObjects() {
 
 function pickSpawn(difficulty) {
 
+}
+
+function createParticles(particle) {
+  const x = Phaser.Math.Between(64, 1200);
+  const y = Phaser.Math.Between(64, 600);
+
+  particle.x = x;
+  particle.y = y;
+
+  particle.zAxis = Phaser.Math.Between(1, 5);
+  particle.setImmovable();
+  particle.body.allowGravity = false;
+
+  particle.setVelocity(Math.pow(particle.zAxis, 2) * -3, 0);
+  console.log(particle);
+  particle.setScale(particle.zAxis / 10, particle.zAxis / 10);
 }
