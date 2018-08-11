@@ -19,6 +19,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 let keys;
+let space;
 
 let rene;
 const meteors = [];
@@ -40,7 +41,8 @@ function preload() {
 }
 
 function create() {
-  keys = this.input.keyboard.addKeys('Z,Q,S,D,SPACE');
+  keys = this.input.keyboard.addKeys('Z,Q,S,D');
+  space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   this.physics.world.checkCollision.left = false;
   this.physics.world.checkCollision.right = false;
 
@@ -66,15 +68,17 @@ function create() {
 
   this.physics.add.overlap(rene, bonuses, (ren, bon) => {
     if (ren.inventory.length < 3) {
-      const tween = this.tweens.add({
-        targets: ren,
-        ease: t => --t * t * ((5 + 1) * t + 5) + 1,
-        duration: 400,
-        scaleX: rene.scaleX + 1,
-        scaleY: rene.scaleY + 1
-      });
-      ren.inventory.push(bon.type);
-      bon.destroy();
+      if (!this.tweens.isTweening(ren)) {
+        const tween = this.tweens.add({
+          targets: ren,
+          ease: t => --t * t * ((5 + 1) * t + 5) + 1,
+          duration: 400,
+          scaleX: rene.scaleX + 1,
+          scaleY: rene.scaleY + 1
+        });
+        ren.inventory.push(bon.type);
+        bon.destroy();
+      }
     }
   });
 }
@@ -87,7 +91,25 @@ function update() {
       met.destroy();
     }
   });
+
+  if (Phaser.Input.Keyboard.JustDown(space)) {
+    if (rene.inventory.length > 0) {
+      if (!this.tweens.isTweening(rene)) {
+        const shot = rene.inventory.shift();
+        const tween = this.tweens.add({
+          targets: rene,
+          ease: t => --t * t * ((5 + 1) * t + 5) + 1,
+          duration: 400,
+          scaleX: rene.scaleX - 1,
+          scaleY: rene.scaleY - 1
+        });
+      }
+    }
+  }
+
   if (rene.isDead) {
+    spawnCount = 1;
+    delay = 5000;
     this.scene.restart();
   }
 }
