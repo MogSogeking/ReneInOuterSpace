@@ -4,3 +4,4 @@ phaser3-tutorial-src
 .vscode
 node_modules
 package-lock.json
+assets/*.xcf
