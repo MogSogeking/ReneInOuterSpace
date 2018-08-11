@@ -46,6 +46,7 @@ function preload() {
   this.load.image('bonus', 'assets/bonus.png');
   this.load.spritesheet('power', 'assets/power.png', { frameWidth: 128, frameHeight: 128 });
   this.load.image('slot', 'assets/slot.png');
+  this.load.image('lazor', 'assets/lazor.png');
 }
 
 function create() {
@@ -133,6 +134,7 @@ function update() {
           scaleY: rene.scaleY - 1
         });
         updateInventoryDisplay();
+        shoot(shot, rene.inventory.length + 1, this);
       }
     }
   }
@@ -215,7 +217,7 @@ function pickSpawn(difficulty) {
 
 function spawnSingleMeteor(difficulty) {
   let randomScale = 1 + (Math.random() * (difficulty / 10));
-  const randomXVelocity = -(50 + (Math.random() * 100));
+  const randomXVelocity = -(20 + (Math.random() * 50));
   const randomYVelocity = (Math.random() - 0.5) * 600;
 
   if (randomScale > 5) {
@@ -261,4 +263,59 @@ function updateInventoryDisplay() {
     }
   }
   console.log(itemImages.getChildren());
+}
+
+function shoot(type, size, context) {
+  if (type === 'shot') {
+    if (size === 1) {
+      const shot = context.physics.add.image(rene.x, rene.y, 'power', 1);
+      shot.setScale(0.2, 0.2)
+        .setVelocityX(400);
+
+      shot.body.allowGravity = false;
+      context.physics.add.overlap(shot, meteors, (sho, met) => {
+        sho.destroy();
+        met.destroy();
+      });
+    } else if (size === 2) {
+      const shots = context.physics.add.group({
+        key: 'power',
+        repeat: 2,
+        frame: 1,
+        setXY: {
+          x: rene.x,
+          y: rene.y,
+        },
+        setRotation: {
+          value: 0.2,
+          step: -0.2,
+        },
+        setScale: {
+          x: 0.2,
+          y: 0.2
+        }
+      });
+      shots.setVelocityX(400, 0);
+      shots.setVelocityY(150, -100);
+
+      shots.getChildren().forEach((shot) => { shot.body.allowGravity = false; });
+      context.physics.add.overlap(shots, meteors, (sho, met) => {
+        sho.destroy();
+        met.destroy();
+      });
+    } else {
+      const lazor = context.physics.add.image(rene.x + 600, rene.y, 'lazor');
+      lazor.body.allowGravity = false;
+      lazor.setVelocity(20, 20);
+      context.tweens.add({
+        targets: lazor,
+        alpha: { value: 0, duration: 2000, ease: t => Math.pow(t, 0.01), },
+        onComplete: ({ targets }) => targets[0].destroy()
+      });
+      context.cameras.main.shake(250, 0.02);
+      context.physics.add.overlap(lazor, meteors, (laz, met) => {
+        met.destroy();
+      });
+    }
+  }
 }
