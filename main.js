@@ -31,6 +31,7 @@ let spawnEvent;
 let bonusEvent;
 let spawnCount = 1;
 let particles;
+let slots;
 
 function preload() {
   this.load.image('rene', 'assets/rene.png');
@@ -38,6 +39,8 @@ function preload() {
   this.load.image('spaceCollapse', 'assets/spaceCollapse.png');
   this.load.image('star', 'assets/star.png');
   this.load.image('greenBonus', 'assets/greenBonus.png');
+  this.load.spritesheet('bonus', 'assets/bonus.png', { frameWidth: 128, frameHeight: 128 });
+  this.load.image('slot', 'assets/slot.png');
 }
 
 function create() {
@@ -49,6 +52,26 @@ function create() {
   particles = this.physics.add.group({ key: 'star', repeat: 80 });
   particles.children.iterate(createParticles, this);
 
+  slots = this.add.group({
+    key: 'slot',
+    repeat: 2,
+    setXY: {
+      x: 784,
+      y: 96,
+      stepX: 160,
+    }
+  });
+
+  itemImages = this.add.group({
+    key: 'bonus',
+    repeat: 2,
+    frame: 0,
+    setXY: {
+      x: 784,
+      y: 96,
+      stepX: 160,
+    }
+  });
 
   spaceCollapse = this.physics.add.image(22, 300, 'spaceCollapse')
     .setImmovable()
@@ -209,4 +232,12 @@ function createParticles(particle) {
 
   particle.setVelocity(Math.pow(particle.zAxis, 2) * -3, 0);
   particle.setScale(particle.zAxis / 10, particle.zAxis / 10);
+}
+
+function updateInventoryDisplay() {
+  for (let i = 0; i < 3; i++) {
+    if (!rene.inventory[i]) {
+      itemImages.getChildren()[i].frame = 0;
+    }
+  }
 }
