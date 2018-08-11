@@ -89,18 +89,31 @@ function movingRene() {
   } else {
     rene.setAngularVelocity(120);
   }
+
+  if (rene.x > 1200) {
+    rene.setVelocityX(0);
+    rene.setAccelerationX(-1000);
+  }
 }
 
 function spawnObjects() {
   delay -= 1000 / Math.pow(spawnCount, 1.2);
   spawnCount += 1;
-  console.log(delay);
 
-  let randomScale = 1 + (Math.random() * (spawnCount / 10));
+  pickSpawn.bind(this)(spawnCount);
+  spawnEvent = this.time.addEvent({
+    delay, callback: spawnObjects, callbackScope: this
+  });
+}
+
+function pickSpawn(difficulty) {
+  spawnSingleMeteor.bind(this)(difficulty);
+}
+
+function spawnSingleMeteor(difficulty) {
+  let randomScale = 1 + (Math.random() * (difficulty / 10));
   const randomXVelocity = -(50 + (Math.random() * 100));
   const randomYVelocity = (Math.random() - 0.5) * 600;
-
-  console.log(randomScale);
 
   if (randomScale > 5) {
     randomScale = 5;
@@ -117,13 +130,6 @@ function spawnObjects() {
   meteors.push(meteor);
 
   this.physics.add.collider(rene, meteor);
-  spawnEvent = this.time.addEvent({
-    delay, callback: spawnObjects, callbackScope: this
-  });
-}
-
-function pickSpawn(difficulty) {
-
 }
 
 function createParticles(particle) {
