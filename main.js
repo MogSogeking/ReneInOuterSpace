@@ -21,6 +21,11 @@ const game = new Phaser.Game(config);
 let keys;
 let space;
 
+const items = {
+  shot: 1,
+  time: 2,
+};
+
 let rene;
 const meteors = [];
 const bonuses = [];
@@ -38,8 +43,8 @@ function preload() {
   this.load.image('meteor', 'assets/meteor.png');
   this.load.image('spaceCollapse', 'assets/spaceCollapse.png');
   this.load.image('star', 'assets/star.png');
-  this.load.image('greenBonus', 'assets/greenBonus.png');
-  this.load.spritesheet('bonus', 'assets/bonus.png', { frameWidth: 128, frameHeight: 128 });
+  this.load.image('bonus', 'assets/bonus.png');
+  this.load.spritesheet('power', 'assets/power.png', { frameWidth: 128, frameHeight: 128 });
   this.load.image('slot', 'assets/slot.png');
 }
 
@@ -63,7 +68,7 @@ function create() {
   });
 
   itemImages = this.add.group({
-    key: 'bonus',
+    key: 'power',
     repeat: 2,
     frame: 0,
     setXY: {
@@ -101,6 +106,7 @@ function create() {
         });
         ren.inventory.push(bon.type);
         bon.destroy();
+        updateInventoryDisplay();
       }
     }
   });
@@ -126,6 +132,7 @@ function update() {
           scaleX: rene.scaleX - 1,
           scaleY: rene.scaleY - 1
         });
+        updateInventoryDisplay();
       }
     }
   }
@@ -170,9 +177,20 @@ function movingRene() {
 function spawnBonus() {
   const randomXVelocity = -(200 + (Math.random() * 100));
   const randomYVelocity = (Math.random() - 0.5) * 800;
+  const randomBonus = Math.random();
+  let bonus;
 
-  const bonus = this.physics.add.image(1500, 300, 'greenBonus')
-    .setBounce(1, 1)
+  if (randomBonus > 0.8) {
+    bonus = this.physics.add.image(1500, 300, 'bonus');
+    bonus.type = 'time';
+    bonus.setTint(0x0000ff);
+  } else {
+    bonus = this.physics.add.image(1500, 300, 'bonus');
+    bonus.type = 'shot';
+    bonus.setTint(0x00ff00);
+  }
+
+  bonus.setBounce(1, 1)
     .setAngularVelocity(300)
     .setVelocity(randomXVelocity, randomYVelocity)
     .setCollideWorldBounds(true)
@@ -237,7 +255,10 @@ function createParticles(particle) {
 function updateInventoryDisplay() {
   for (let i = 0; i < 3; i++) {
     if (!rene.inventory[i]) {
-      itemImages.getChildren()[i].frame = 0;
+      itemImages.getChildren()[i].setFrame(0);
+    } else {
+      itemImages.getChildren()[i].setFrame(items[rene.inventory[i]]);
     }
   }
+  console.log(itemImages.getChildren());
 }
