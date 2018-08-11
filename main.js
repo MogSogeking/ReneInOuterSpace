@@ -130,14 +130,15 @@ function createParticles(particle) {
   const x = Phaser.Math.Between(64, 1200);
   const y = Phaser.Math.Between(64, 600);
 
+  const tint = (Phaser.Math.Between(0x66, 0xff) * 0x10000) + (Phaser.Math.Between(0x66, 0xff) * 0x100) + Phaser.Math.Between(0x66, 0xff);
   particle.x = x;
   particle.y = y;
 
   particle.zAxis = Phaser.Math.Between(1, 5);
   particle.setImmovable();
   particle.body.allowGravity = false;
+  particle.setTint(tint);
 
   particle.setVelocity(Math.pow(particle.zAxis, 2) * -3, 0);
-  console.log(particle);
   particle.setScale(particle.zAxis / 10, particle.zAxis / 10);
 }
