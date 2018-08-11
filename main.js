@@ -22,19 +22,21 @@ let keys;
 
 let rene;
 const meteors = [];
-let meteor;
+const bonuses = [];
 let spaceCollapse;
 
 let delay = 5000;
 let spawnEvent;
+let bonusEvent;
 let spawnCount = 1;
 let particles;
 
 function preload() {
   this.load.image('rene', 'assets/rene.png');
   this.load.image('meteor', 'assets/meteor.png');
-  this.load.image('space_collapse', 'assets/space_collapse.png');
+  this.load.image('spaceCollapse', 'assets/spaceCollapse.png');
   this.load.image('star', 'assets/star.png');
+  this.load.image('greenBonus', 'assets/greenBonus.png');
 }
 
 function create() {
@@ -46,7 +48,7 @@ function create() {
   particles.children.iterate(createParticles, this);
 
 
-  spaceCollapse = this.physics.add.image(22, 300, 'space_collapse')
+  spaceCollapse = this.physics.add.image(22, 300, 'spaceCollapse')
     .setImmovable()
     .setGravityX(0);
   spaceCollapse.body.allowGravity = false;
@@ -58,30 +60,51 @@ function create() {
     delay, callback: spawnObjects, callbackScope: this
   });
 
-  this.physics.add.collider(rene, spaceCollapse, (ren) => {
-    ren.destroy();
+  bonusEvent = this.time.addEvent({
+    delay: 7000, callback: spawnBonus, callbackScope: this, loop: true
   });
 
-  this.physics.add.collider(meteors, spaceCollapse, (met) => {
-    met.destroy();
+  this.physics.add.overlap(rene, bonuses, (ren, bon) => {
+    if (ren.inventory.length < 3) {
+      const tween = this.tweens.add({
+        targets: ren,
+        ease: t => --t * t * ((5 + 1) * t + 5) + 1,
+        duration: 400,
+        scaleX: rene.scaleX + 1,
+        scaleY: rene.scaleY + 1
+      });
+      ren.inventory.push(bon.type);
+      bon.destroy();
+    }
   });
 }
 
 function update() {
   movingRene();
   this.physics.world.wrap(particles.getChildren());
+  meteors.forEach((met) => {
+    if (met.x < -met.width) {
+      met.destroy();
+    }
+  });
+  if (rene.isDead) {
+    this.scene.restart();
+  }
 }
 
 function setReneConfig() {
   rene.setBounce(1, 1)
     .setDrag(0.98, 0.98)
     .setAngularVelocity(120)
-    .setMaxVelocity(300, 300)
+    .setMaxVelocity(500, 500)
     .setCollideWorldBounds(true);
   rene.body.useDamping = true;
+  rene.inventory = [];
+  rene.isDead = false;
 }
 
 function movingRene() {
+  rene.setMaxVelocity(500 * (1 + (rene.scaleX - 1) / 2), 500 * (1 + (rene.scaleY - 1) / 2));
   rene.setAccelerationX((keys.D.isDown - keys.Q.isDown) * 1000);
   rene.setAccelerationY((keys.S.isDown - keys.Z.isDown) * 1000);
   if (keys.S.isDown || keys.D.isDown || keys.Q.isDown || keys.Z.isDown) {
@@ -94,6 +117,23 @@ function movingRene() {
     rene.setVelocityX(0);
     rene.setAccelerationX(-1000);
   }
+  if (rene.x < -rene.width * rene.scaleX) {
+    rene.isDead = true;
+  }
+}
+
+function spawnBonus() {
+  const randomXVelocity = -(200 + (Math.random() * 100));
+  const randomYVelocity = (Math.random() - 0.5) * 800;
+
+  const bonus = this.physics.add.image(1500, 300, 'greenBonus')
+    .setBounce(1, 1)
+    .setAngularVelocity(300)
+    .setVelocity(randomXVelocity, randomYVelocity)
+    .setCollideWorldBounds(true)
+    .setImmovable();
+  bonus.body.allowGravity = false;
+  bonuses.push(bonus);
 }
 
 function spawnObjects() {
@@ -119,7 +159,7 @@ function spawnSingleMeteor(difficulty) {
     randomScale = 5;
   }
 
-  meteor = this.physics.add.image(1500, 300, 'meteor')
+  const meteor = this.physics.add.image(1500, 300, 'meteor')
     .setBounce(1, 1)
     .setAngularVelocity(20)
     .setVelocity(randomXVelocity, randomYVelocity)
