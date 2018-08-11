@@ -6,5 +6,6 @@
     "comma-dangle": "off",
     // we support node 4
     "prefer-destructuring": 0,
+    "no-use-before-define":"off",
   },
 }
