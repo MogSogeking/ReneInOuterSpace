@@ -6,7 +6,6 @@ const config = {
     default: 'arcade',
     arcade: {
       // debug: true,
-      gravity: { x: -200 }
     },
   },
   scene: {
@@ -38,6 +37,10 @@ let spawnCount = 1;
 let particles;
 let slots;
 let itemImages;
+let score = 0;
+let scoreText;
+let bestScore = 0;
+let bestScoreText;
 
 function preload() {
   this.load.image('rene', 'assets/rene.png');
@@ -55,6 +58,8 @@ function create() {
   space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   this.physics.world.checkCollision.left = false;
   this.physics.world.checkCollision.right = false;
+  scoreText = this.add.text(64, 16, 'Score: 0');
+  bestScoreText = this.add.text(64, 48, `Previous best: ${bestScore}`);
 
   particles = this.physics.add.group({ key: 'star', repeat: 80 });
   particles.children.iterate(createParticles, this);
@@ -112,6 +117,17 @@ function create() {
         ren.inventory.push(bon.type);
         bon.destroy();
         updateInventoryDisplay();
+        score += 1000;
+        if (!this.tweens.isTweening(scoreText)) {
+          this.tweens.add(({
+            targets: scoreText,
+            ease: 'Quad.easeInOut',
+            yoyo: true,
+            duration: 100,
+            scaleX: 1.3,
+            scaleY: 1.3
+          }));
+        }
       }
     }
   });
@@ -138,13 +154,20 @@ function update() {
           scaleY: rene.scaleY - 1
         });
         updateInventoryDisplay();
-        shoot(shot, rene.inventory.length + 1, this);
+        shoot.bind(this)(shot, rene.inventory.length + 1);
       }
     }
   }
 
+  score++;
+  scoreText.setText(`Score: ${score}`);
+
   if (rene.isDead) {
+    if (bestScore < score) {
+      bestScore = score;
+    }
     spawnCount = 1;
+    score = 0;
     delay = 5000;
     this.scene.restart();
   }
@@ -159,6 +182,7 @@ function setReneConfig() {
   rene.body.useDamping = true;
   rene.inventory = [];
   rene.isDead = false;
+  rene.setGravityX(-200);
 }
 
 function movingRene() {
@@ -213,14 +237,16 @@ function spawnObjects() {
   spawnEvent = this.time.addEvent({
     delay, callback: spawnObjects, callbackScope: this
   });
+  score += 200;
 }
 
 function pickSpawn(difficulty) {
-  spawnSingleMeteor.bind(this)(difficulty);
+  spawnMeteors.bind(this)(difficulty);
 }
 
-function spawnSingleMeteor(difficulty) {
-  let randomScale = 1 + (Math.random() * (difficulty / 10));
+function spawnMeteors(difficulty) {
+  const meteorNumber = 1 + Math.floor(Math.random() * difficulty);
+  let randomScale = 1 + (Math.random() * Math.random() * (difficulty / 10));
   const randomXVelocity = -(20 + (Math.random() * 50));
   const randomYVelocity = (Math.random() - 0.5) * 600;
 
@@ -228,7 +254,7 @@ function spawnSingleMeteor(difficulty) {
     randomScale = 5;
   }
 
-  const meteor = this.physics.add.image(1500, 300, 'meteor')
+  const meteor = this.physics.add.image(1300, 300, 'meteor')
     .setBounce(1, 1)
     .setAngularVelocity(20)
     .setVelocity(randomXVelocity, randomYVelocity)
@@ -236,10 +262,13 @@ function spawnSingleMeteor(difficulty) {
     .setImmovable()
     .setScale(randomScale, randomScale);
 
+  meteor.setGravityX(-100 / meteor.scaleX);
+
   meteors.push(meteor);
 
-  this.physics.add.collider(rene, meteor);
+  this.physics.add.collider(rene, meteor, () => this.cameras.main.shake(100, 0.002));
 }
+
 
 function createParticles(particle) {
   const x = Phaser.Math.Between(64, 1200);
@@ -269,20 +298,31 @@ function updateInventoryDisplay() {
   console.log(itemImages.getChildren());
 }
 
-function shoot(type, size, context) {
+function shoot(type, size) {
   if (type === 'shot') {
     if (size === 1) {
-      const shot = context.physics.add.image(rene.x, rene.y, 'power', 1);
+      const shot = this.physics.add.image(rene.x, rene.y, 'power', 1);
       shot.setScale(0.2, 0.2)
         .setVelocityX(400);
 
       shot.body.allowGravity = false;
-      context.physics.add.overlap(shot, meteors, (sho, met) => {
+      this.physics.add.overlap(shot, meteors, (sho, met) => {
         sho.destroy();
         met.destroy();
+        score += 1000;
+        if (!this.tweens.isTweening(scoreText)) {
+          this.tweens.add(({
+            targets: scoreText,
+            ease: 'Quad.easeInOut',
+            yoyo: true,
+            duration: 100,
+            scaleX: 1.3,
+            scaleY: 1.3
+          }));
+        }
       });
     } else if (size === 2) {
-      const shots = context.physics.add.group({
+      const shots = this.physics.add.group({
         key: 'power',
         repeat: 2,
         frame: 1,
@@ -303,22 +343,44 @@ function shoot(type, size, context) {
       shots.setVelocityY(150, -100);
 
       shots.getChildren().forEach((shot) => { shot.body.allowGravity = false; });
-      context.physics.add.overlap(shots, meteors, (sho, met) => {
+      this.physics.add.overlap(shots, meteors, (sho, met) => {
         sho.destroy();
         met.destroy();
+        score += 1000;
+        if (!this.tweens.isTweening(scoreText)) {
+          this.tweens.add(({
+            targets: scoreText,
+            ease: 'Quad.easeInOut',
+            yoyo: true,
+            duration: 100,
+            scaleX: 1.3,
+            scaleY: 1.3
+          }));
+        }
       });
     } else {
-      const lazor = context.physics.add.image(rene.x + 600, rene.y, 'lazor');
+      const lazor = this.physics.add.image(rene.x + 600, rene.y, 'lazor');
       lazor.body.allowGravity = false;
       lazor.setVelocity(20, 20);
-      context.tweens.add({
+      this.tweens.add({
         targets: lazor,
-        alpha: { value: 0, duration: 2000, ease: t => Math.pow(t, 0.01), },
+        alpha: { value: 0, duration: 1000, ease: t => Math.pow(t, 0.01), },
         onComplete: ({ targets }) => targets[0].destroy()
       });
-      context.cameras.main.shake(250, 0.02);
-      context.physics.add.overlap(lazor, meteors, (laz, met) => {
+      this.cameras.main.shake(250, 0.02);
+      this.physics.add.overlap(lazor, meteors, (laz, met) => {
         met.destroy();
+        score += 1000;
+        if (!this.tweens.isTweening(scoreText)) {
+          this.tweens.add(({
+            targets: scoreText,
+            ease: 'Quad.easeInOut',
+            yoyo: true,
+            duration: 100,
+            scaleX: 1.3,
+            scaleY: 1.3
+          }));
+        }
       });
     }
   }
