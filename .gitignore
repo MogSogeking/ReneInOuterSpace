@@ -5,3 +5,5 @@ phaser3-tutorial-src
 node_modules
 package-lock.json
 assets/*.xcf
+sounds/*_data
+sounds/*.aup

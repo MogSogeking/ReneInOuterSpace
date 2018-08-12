@@ -49,11 +49,14 @@ let reneOuilleSound;
 let reneBonusSound;
 let reneLazorSound;
 let renePewSound;
+let reneDeathSound;
 let objectBoomSound;
+let bgm;
 
 function preload() {
   this.load.image('rene', 'assets/rene.png');
   this.load.image('meteor', 'assets/meteor.png');
+  this.load.image('meteorBoom', 'assets/meteorBoom.png');
   this.load.image('spaceCollapse', 'assets/spaceCollapse.png');
   this.load.image('star', 'assets/star.png');
   this.load.image('bonus', 'assets/bonus.png');
@@ -65,7 +68,9 @@ function preload() {
   this.load.audio('reneBonus', 'sounds/reneBonus.mp3');
   this.load.audio('reneLazor', 'sounds/reneLazor.mp3');
   this.load.audio('renePew', 'sounds/renePew.mp3');
+  this.load.audio('reneDeath', 'sounds/reneDeath.mp3');
   this.load.audio('objectBoom', 'sounds/objectBoom.mp3');
+  this.load.audio('bgm', 'sounds/bgm.mp3');
   
 }
 
@@ -74,8 +79,14 @@ function create() {
   reneBonusSound = this.sound.add('reneBonus');
   reneLazorSound = this.sound.add('reneLazor');
   renePewSound = this.sound.add('renePew');
+  reneDeathSound = this.sound.add('reneDeath');
   objectBoomSound = this.sound.add('objectBoom');
+  bgm = this.sound.add('bgm');
+  bgm.setLoop(true);
+  bgm.play();
 
+  this.sound.override = false;
+  console.log(this);
 
   keys = this.input.keyboard.addKeys('Z,Q,S,D');
   space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -213,6 +224,8 @@ function update() {
     spawnCount = 1;
     score = 0;
     delay = 5000;
+    bgm.stop();
+    reneDeathSound.play();
     this.scene.restart();
   }
 }
@@ -282,7 +295,6 @@ function spawnObjects() {
   spawnEvent = this.time.addEvent({
     delay, callback: spawnObjects, callbackScope: this
   });
-  score += 200;
 }
 
 function pickSpawn(difficulty) {
@@ -314,10 +326,22 @@ function spawnMeteors(difficulty) {
 
   this.physics.add.collider(rene, meteor, () => {
     this.cameras.main.shake(100, 0.002);
-    reneOuilleSound.play();
+    if(!reneOuilleSound.isPlaying) {
+      reneOuilleSound.play();
+    }
   });
 }
 
+function destroyMeteor(meteor) {
+  const meteorBoom = this.add.image(meteor.x, meteor.y, 'meteorBoom');
+  meteorBoom.setScale(meteor.scaleX, meteor.scaleY);
+  this.tweens.add({
+    targets: meteorBoom,
+    alpha: { value: 0, duration: 1000, ease: 'Quad.easeOut' },
+    onComplete: ({ targets }) => targets[0].destroy()
+  })
+  meteor.destroy();
+}
 
 function createParticles(particle) {
   const x = Phaser.Math.Between(64, 1200);
@@ -356,8 +380,9 @@ function shoot(type, size) {
       shot.body.allowGravity = false;
       renePewSound.play();
       this.physics.add.overlap(shot, meteors, (sho, met) => {
+        
         sho.destroy();
-        met.destroy();
+        destroyMeteor.bind(this)(met);
         objectBoomSound.play();
         score += 1000;
         if (!this.tweens.isTweening(scoreText)) {
@@ -396,7 +421,7 @@ function shoot(type, size) {
       renePewSound.play();
       this.physics.add.overlap(shots, meteors, (sho, met) => {
         sho.destroy();
-        met.destroy();
+        destroyMeteor.bind(this)(met);
         objectBoomSound.play();
         score += 1000;
         if (!this.tweens.isTweening(scoreText)) {
@@ -422,7 +447,7 @@ function shoot(type, size) {
       });
       this.cameras.main.shake(250, 0.02);
       this.physics.add.overlap(lazor, meteors, (laz, met) => {
-        met.destroy();
+        destroyMeteor.bind(this)(met);
         objectBoomSound.play();
         score += 1000;
         if (!this.tweens.isTweening(scoreText)) {
