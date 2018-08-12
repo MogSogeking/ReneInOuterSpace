@@ -523,7 +523,9 @@ function shoot(type, size) {
 
       this.physics.add.overlap(shot, indestructiballs, (sho) => {
         sho.destroy();
-        indestructitingSound.play();
+        if (!indestructitingSound.isPlaying) {
+          indestructitingSound.play();
+        }
       });
     } else if (size === 2) {
       const shots = this.physics.add.group({
@@ -556,7 +558,9 @@ function shoot(type, size) {
       });
       this.physics.add.overlap(shots, indestructiballs, (ball, sho) => {
         sho.destroy();
-        indestructitingSound.play();
+        if (!indestructitingSound.isPlaying) {
+          indestructitingSound.play();
+        }
       });
     } else {
       const lazor = this.physics.add.image(rene.x + 600, rene.y, 'lazor');
@@ -575,7 +579,9 @@ function shoot(type, size) {
         addScore.bind(this)(1000);
       });
       this.physics.add.overlap(lazor, indestructiballs, () => {
-        indestructitingSound.play();
+        if (!indestructitingSound.isPlaying) {
+          indestructitingSound.play();
+        }
       });
     }
   } else if (type === 'time') {
