@@ -355,11 +355,19 @@ function pickSpawn(diff) {
 }
 
 function spawnBalls(trueDifficulty) {
-  const ballNumber = 1; // Math.ceil(trueDifficulty * Math.random() * 3)
+  const ballNumber = Math.ceil(trueDifficulty * Math.random() * 3);
+  const randomVelocity = -(50 + (Math.random() * 150));
+
+  const collide = () => {
+    this.cameras.main.shake(100, 0.002);
+    if (!reneOuilleSound.isPlaying) {
+      reneOuilleSound.play();
+    }
+  };
 
   if (ballNumber === 1) {
     let indestructiball;
-    const ballPattern = trueDifficulty * Math.random();
+    const ballPattern = Math.random();
     if (ballPattern < 0.33) {
       const isHigh = Math.random() > 0.5;
       if (isHigh) {
@@ -376,48 +384,86 @@ function spawnBalls(trueDifficulty) {
 
     indestructiball.body.setAllowGravity(false);
     indestructiball.setImmovable()
-      .setVelocityX(-(50 + (Math.random() * 150)));
+      .setVelocityX(randomVelocity);
 
-    this.physics.add.collider(rene, indestructiball, () => {
-      this.cameras.main.shake(100, 0.002);
-      if (!reneOuilleSound.isPlaying) {
-        reneOuilleSound.play();
-      }
-    });
+    this.physics.add.collider(rene, indestructiball, collide);
   } else if (ballNumber === 2) {
+    const indestructiballz = [];
+    const ballPattern = Math.random();
+    if (ballPattern < 0.33) {
+      indestructiballz.push(this.physics.add.image(1300, 48, 'indestructiball'));
+      indestructiballz.push(this.physics.add.image(1300, 552, 'indestructiball'));
+    } else if (ballPattern < 0.66) {
+      indestructiballz.push(this.physics.add.image(1300, 150, 'indestructiball'));
+      indestructiballz.push(this.physics.add.image(1300, 450, 'indestructiball'));
+    } else {
+      indestructiballz.push(this.physics.add.image(1300, 225, 'indestructiball'));
+      indestructiballz.push(this.physics.add.image(1300, 375, 'indestructiball'));
+    }
 
+    for (let i = 0; i < 2; i += 1) {
+      indestructiballs.push(indestructiballz[i]);
+      indestructiballz[i].body.setAllowGravity(false);
+      indestructiballz[i].setImmovable()
+        .setVelocityX(randomVelocity);
+
+      this.physics.add.collider(rene, indestructiballz[i], collide);
+    }
+  } else {
+    const indestructiballz = [];
+    const ballPattern = Math.random();
+    if (ballPattern > 0.5) {
+      indestructiballz.push(this.physics.add.image(1300, 48, 'indestructiball'));
+      indestructiballz.push(this.physics.add.image(1300, 552, 'indestructiball'));
+      indestructiballz.push(this.physics.add.image(1300, 300, 'indestructiball'));
+    } else {
+      indestructiballz.push(this.physics.add.image(1300, 150, 'indestructiball'));
+      indestructiballz.push(this.physics.add.image(1300, 450, 'indestructiball'));
+      indestructiballz.push(this.physics.add.image(1300, 300, 'indestructiball'));
+    }
+
+    for (let i = 0; i < 3; i += 1) {
+      indestructiballs.push(indestructiballz[i]);
+      indestructiballz[i].body.setAllowGravity(false);
+      indestructiballz[i].setImmovable()
+        .setVelocityX(randomVelocity);
+
+      this.physics.add.collider(rene, indestructiballz[i], collide);
+    }
   }
 }
 
 function spawnMeteors(trueDifficulty) {
-  const meteorNumber = Math.ceil(Math.random() * trueDifficulty);
-  let randomScale = 1 + (Math.random() * trueDifficulty * 4);
-  const randomXVelocity = -(20 + (Math.random() * 50));
-  const randomYVelocity = (Math.random() - 0.5) * 600;
-  console.log('scale:', randomScale);
-  if (randomScale > 5) {
-    randomScale = 5;
-  }
+  const meteorNumber = Math.ceil(Math.random() * trueDifficulty * 3);
 
-  const meteor = this.physics.add.image(1300, 300, 'meteor')
-    .setBounce(1, 1)
-    .setAngularVelocity(20)
-    .setVelocity(randomXVelocity, randomYVelocity)
-    .setCollideWorldBounds(true)
-    .setImmovable()
-    .setSize(48, 48)
-    .setScale(randomScale, randomScale);
-
-  meteor.setGravityX(-100 / meteor.scaleX);
-
-  meteors.push(meteor);
-
-  this.physics.add.collider(rene, meteor, () => {
+  const collide = () => {
     this.cameras.main.shake(100, 0.002);
     if (!reneOuilleSound.isPlaying) {
       reneOuilleSound.play();
     }
-  });
+  };
+
+  for (let i = 0; i < meteorNumber; i += 1) {
+    let randomScale = 1 + (Math.random() * trueDifficulty * 4);
+    const randomXVelocity = -(20 + (Math.random() * 50));
+    const randomYVelocity = (Math.random() - 0.5) * 600;
+    if (randomScale > 5) {
+      randomScale = 5;
+    }
+    const meteor = this.physics.add.image(1300, 300, 'meteor')
+      .setBounce(1, 1)
+      .setAngularVelocity(20)
+      .setVelocity(randomXVelocity, randomYVelocity)
+      .setCollideWorldBounds(true)
+      .setImmovable()
+      .setSize(48, 48)
+      .setScale(randomScale, randomScale);
+
+    meteor.setGravityX(-100 / meteor.scaleX);
+
+    meteors.push(meteor);
+    this.physics.add.collider(rene, meteor, collide);
+  }
 }
 
 function destroyMeteor(meteor) {
