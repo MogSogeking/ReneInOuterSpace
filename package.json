@@ -1,0 +1,23 @@
+{
+  "name": "reneinouterspace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "prestart": "yarn",
+    "start": "serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MogSogeking/ReneInOuterSpace.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MogSogeking/ReneInOuterSpace/issues"
+  },
+  "homepage": "https://github.com/MogSogeking/ReneInOuterSpace#readme",
+  "dependencies": {
+    "serve": "^9.4.2"
+  }
+}
