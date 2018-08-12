@@ -55,6 +55,10 @@ let renePewSound;
 let reneDeathSound;
 let objectBoomSound;
 let indestructitingSound;
+let smallBurp;
+let mediumBurp;
+let bigBurp;
+let watch;
 let bgm;
 
 function preload() {
@@ -76,6 +80,10 @@ function preload() {
   this.load.audio('reneDeath', 'sounds/reneDeath.mp3');
   this.load.audio('objectBoom', 'sounds/objectBoom.mp3');
   this.load.audio('indestructiting', 'sounds/indestructiting.mp3');
+  this.load.audio('smallBurp', 'sounds/smallBurp.mp3');
+  this.load.audio('mediumBurp', 'sounds/mediumBurp.mp3');
+  this.load.audio('bigBurp', 'sounds/bigBurp.mp3');
+  this.load.audio('watch', 'sounds/watch.mp3');
   this.load.audio('bgm', 'sounds/bgm.mp3');
 }
 
@@ -87,6 +95,10 @@ function create() {
   reneDeathSound = this.sound.add('reneDeath');
   objectBoomSound = this.sound.add('objectBoom');
   indestructitingSound = this.sound.add('indestructiting');
+  smallBurp = this.sound.add('smallBurp');
+  mediumBurp = this.sound.add('mediumBurp');
+  bigBurp = this.sound.add('bigBurp');
+  watch = this.sound.add('watch');
   bgm = this.sound.add('bgm');
   bgm.setLoop(true);
   bgm.play();
@@ -460,7 +472,7 @@ function shoot(type, size) {
         destroyMeteor.bind(this)(met);
         objectBoomSound.play();
 
-        addScore(1000);
+        addScore.bind(this)(1000);
       });
 
       this.physics.add.overlap(shot, indestructiballs, (sho) => {
@@ -494,7 +506,7 @@ function shoot(type, size) {
         sho.destroy();
         destroyMeteor.bind(this)(met);
         objectBoomSound.play();
-        addScore(1000);
+        addScore.bind(this)(1000);
       });
       this.physics.add.overlap(shots, indestructiballs, (ball, sho) => {
         sho.destroy();
@@ -514,7 +526,7 @@ function shoot(type, size) {
       this.physics.add.overlap(lazor, meteors, (laz, met) => {
         destroyMeteor.bind(this)(met);
         objectBoomSound.play();
-        addScore(1000);
+        addScore.bind(this)(1000);
       });
       this.physics.add.overlap(lazor, indestructiballs, () => {
         indestructitingSound.play();
@@ -538,11 +550,11 @@ function shoot(type, size) {
           });
         }
       });
+      watch.play();
     } else if (size === 2) {
       meteors.forEach((meteor) => {
         if (meteor.body) {
           meteor.storedVelocity = { x: meteor.body.velocity.x, y: meteor.body.velocity.y };
-          console.log(meteor.storedVelocity);
           meteor.setVelocityX(0);
           meteor.setVelocityY(0);
           meteor.setAngularVelocity(0);
@@ -554,7 +566,6 @@ function shoot(type, size) {
             if (meteor && meteor.body) {
               meteor.setVelocityX(meteor.storedVelocity.x);
               meteor.setVelocityY(meteor.storedVelocity.y);
-              console.log(meteor.storedVelocity);
               meteor.setAngularVelocity(20);
               meteor.body.allowGravity = true;
             }
@@ -562,9 +573,22 @@ function shoot(type, size) {
           callbackScope: this
         });
       });
+      watch.play();
     } else {
       difficulty = 1;
       delay = 5000;
+      watch.play();
+    }
+  } else if (type === 'gaz') {
+    if (size === 1) {
+      smallBurp.play();
+      this.cameras.main.shake(100, 0.002);
+    } else if (size === 2) {
+      mediumBurp.play();
+      this.cameras.main.shake(150, 0.004);
+    } else {
+      bigBurp.play();
+      this.cameras.main.shake(200, 0.01);
     }
   }
 }
