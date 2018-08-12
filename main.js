@@ -450,17 +450,8 @@ function shoot(type, size) {
         sho.destroy();
         destroyMeteor.bind(this)(met);
         objectBoomSound.play();
-        score += 1000;
-        if (!this.tweens.isTweening(scoreText)) {
-          this.tweens.add(({
-            targets: scoreText,
-            ease: 'Quad.easeInOut',
-            yoyo: true,
-            duration: 100,
-            scaleX: 1.3,
-            scaleY: 1.3
-          }));
-        }
+        
+        addScore(1000);
       });
     } else if (size === 2) {
       const shots = this.physics.add.group({
@@ -489,17 +480,7 @@ function shoot(type, size) {
         sho.destroy();
         destroyMeteor.bind(this)(met);
         objectBoomSound.play();
-        score += 1000;
-        if (!this.tweens.isTweening(scoreText)) {
-          this.tweens.add(({
-            targets: scoreText,
-            ease: 'Quad.easeInOut',
-            yoyo: true,
-            duration: 100,
-            scaleX: 1.3,
-            scaleY: 1.3
-          }));
-        }
+        addScore(1000);
       });
     } else {
       const lazor = this.physics.add.image(rene.x + 600, rene.y, 'lazor');
@@ -515,22 +496,26 @@ function shoot(type, size) {
       this.physics.add.overlap(lazor, meteors, (laz, met) => {
         destroyMeteor.bind(this)(met);
         objectBoomSound.play();
-        score += 1000;
-        if (!this.tweens.isTweening(scoreText)) {
-          this.tweens.add(({
-            targets: scoreText,
-            ease: 'Quad.easeInOut',
-            yoyo: true,
-            duration: 100,
-            scaleX: 1.3,
-            scaleY: 1.3
-          }));
-        }
+        addScore(1000);
       });
     }
   } else if (type === 'time') {
     if (size === 1) {
 
     }
+  }
+}
+
+function addScore(points) {
+  score += points;
+  if (!this.tweens.isTweening(scoreText)) {
+    this.tweens.add(({
+      targets: scoreText,
+      ease: 'Quad.easeInOut',
+      yoyo: true,
+      duration: 100,
+      scaleX: 1.3,
+      scaleY: 1.3
+    }));
   }
 }
