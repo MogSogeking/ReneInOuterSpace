@@ -293,7 +293,7 @@ function spawnBonus() {
     bonus = this.physics.add.image(1500, 300, 'bonus');
     bonus.type = 'time';
     bonus.setTint(0x0000ff);
-  } else if (randomBonus > 0) {
+  } else if (randomBonus > 0.7) {
     bonus = this.physics.add.image(1500, 300, 'bonus');
     bonus.type = 'shot';
     bonus.setTint(0x00ff00);
@@ -331,7 +331,7 @@ function spawnObjects() {
 function pickSpawn(diff) {
   const trueDifficulty = Math.tanh(diff);
 
-  const pickBall = 1;// (Math.random()*trueDifficulty) > 0.2;
+  const pickBall = (Math.random() > 0.7 && trueDifficulty > 0.2);
 
   if (pickBall) {
     spawnBalls.bind(this)(trueDifficulty);
@@ -349,14 +349,14 @@ function spawnBalls(trueDifficulty) {
     let indestructiball;
     const ballPattern = trueDifficulty * Math.random();
     if (ballPattern < 0.33) {
-      indestructiball = this.physics.add.image(1300, (Math.random() * 300) + 150, 'indestructiball');
-    } else if (ballPattern < 0.66) {
       const isHigh = Math.random() > 0.5;
       if (isHigh) {
         indestructiball = this.physics.add.image(1300, 48, 'indestructiball');
       } else {
         indestructiball = this.physics.add.image(1300, 552, 'indestructiball');
       }
+    } else if (ballPattern < 0.66) {
+      indestructiball = this.physics.add.image(1300, (Math.random() * 300) + 150, 'indestructiball');
     } else {
       indestructiball = this.physics.add.image(1300, rene.y, 'indestructiball');
     }
@@ -522,7 +522,49 @@ function shoot(type, size) {
     }
   } else if (type === 'time') {
     if (size === 1) {
-
+      meteors.forEach((meteor) => {
+        if (meteor.body) {
+          meteor.setAccelerationX(-meteor.body.velocity.x);
+          meteor.setAccelerationY(-meteor.body.velocity.y);
+          this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+              if (meteor && meteor.body) {
+                meteor.setAccelerationX(0);
+                meteor.setAccelerationY(0);
+              }
+            },
+            callbackScope: this
+          });
+        }
+      });
+    } else if (size === 2) {
+      meteors.forEach((meteor) => {
+        if (meteor.body) {
+          meteor.storedVelocity = { x: meteor.body.velocity.x, y: meteor.body.velocity.y };
+          console.log(meteor.storedVelocity);
+          meteor.setVelocityX(0);
+          meteor.setVelocityY(0);
+          meteor.setAngularVelocity(0);
+          meteor.body.allowGravity = false;
+        }
+        this.time.addEvent({
+          delay: 4000,
+          callback: () => {
+            if (meteor && meteor.body) {
+              meteor.setVelocityX(meteor.storedVelocity.x);
+              meteor.setVelocityY(meteor.storedVelocity.y);
+              console.log(meteor.storedVelocity);
+              meteor.setAngularVelocity(20);
+              meteor.body.allowGravity = true;
+            }
+          },
+          callbackScope: this
+        });
+      });
+    } else {
+      difficulty = 1;
+      delay = 5000;
     }
   }
 }
