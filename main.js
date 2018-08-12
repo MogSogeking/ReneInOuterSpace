@@ -54,6 +54,7 @@ let reneLazorSound;
 let renePewSound;
 let reneDeathSound;
 let objectBoomSound;
+let indestructitingSound;
 let bgm;
 
 function preload() {
@@ -74,8 +75,8 @@ function preload() {
   this.load.audio('renePew', 'sounds/renePew.mp3');
   this.load.audio('reneDeath', 'sounds/reneDeath.mp3');
   this.load.audio('objectBoom', 'sounds/objectBoom.mp3');
-  this.load.audio('bgm', 'sounds/bgm.mp3');
-  
+  this.load.audio('indestructiting', 'sounds/indestructiting.mp3');
+  this.load.audio('bgm', 'sounds/bgm.mp3');  
 }
 
 function create() {
@@ -85,12 +86,12 @@ function create() {
   renePewSound = this.sound.add('renePew');
   reneDeathSound = this.sound.add('reneDeath');
   objectBoomSound = this.sound.add('objectBoom');
+  indestructitingSound = this.sound.add('indestructiting');
   bgm = this.sound.add('bgm');
   bgm.setLoop(true);
   bgm.play();
 
   this.sound.override = false;
-  console.log(this);
 
   keys = this.input.keyboard.addKeys('Z,Q,S,D');
   space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -282,7 +283,7 @@ function spawnBonus() {
     bonus = this.physics.add.image(1500, 300, 'bonus');
     bonus.type = 'time';
     bonus.setTint(0x0000ff);
-  } else if (randomBonus > 0.7) {
+  } else if (randomBonus > 0) {
     bonus = this.physics.add.image(1500, 300, 'bonus');
     bonus.type = 'shot';
     bonus.setTint(0x00ff00);
@@ -320,7 +321,7 @@ function spawnObjects() {
 function pickSpawn(diff) {
   const trueDifficulty = Math.tanh(diff);
 
-  const pickBall = (Math.random()*trueDifficulty) > 0.2;
+  const pickBall = 1// (Math.random()*trueDifficulty) > 0.2;
 
   if (pickBall) {
     spawnBalls.bind(this)(trueDifficulty);
@@ -363,7 +364,7 @@ function spawnBalls(trueDifficulty) {
     });
       
   } else if(ballNumber === 2) {
-    let ine
+    
   }
 }
 
@@ -453,6 +454,11 @@ function shoot(type, size) {
         
         addScore(1000);
       });
+
+      this.physics.add.overlap(shot, indestructiballs, sho => {
+        sho.destroy();
+        indestructitingSound.play();
+      });
     } else if (size === 2) {
       const shots = this.physics.add.group({
         key: 'power',
@@ -482,6 +488,10 @@ function shoot(type, size) {
         objectBoomSound.play();
         addScore(1000);
       });
+      this.physics.add.overlap(shots, indestructiballs, (ball, sho) => {
+        sho.destroy();
+        indestructitingSound.play();
+      });
     } else {
       const lazor = this.physics.add.image(rene.x + 600, rene.y, 'lazor');
       lazor.body.allowGravity = false;
@@ -498,6 +508,10 @@ function shoot(type, size) {
         objectBoomSound.play();
         addScore(1000);
       });
+      this.physics.add.overlap(lazor, indestructiballs, () => {
+        indestructitingSound.play();
+      });
+
     }
   } else if (type === 'time') {
     if (size === 1) {
