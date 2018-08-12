@@ -5,7 +5,7 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      //debug: true,
+      // debug: true,
     },
   },
   audio: {
@@ -76,7 +76,7 @@ function preload() {
   this.load.audio('reneDeath', 'sounds/reneDeath.mp3');
   this.load.audio('objectBoom', 'sounds/objectBoom.mp3');
   this.load.audio('indestructiting', 'sounds/indestructiting.mp3');
-  this.load.audio('bgm', 'sounds/bgm.mp3');  
+  this.load.audio('bgm', 'sounds/bgm.mp3');
 }
 
 function create() {
@@ -124,8 +124,6 @@ function create() {
     }
   });
 
-  
-
   spaceCollapse = this.add.image(0, 300, 'spaceCollapse').setAngle(-2);
   spaceCollapseBack = this.add.image(0, 300, 'spaceCollapse').setAlpha(0.3);
 
@@ -139,18 +137,30 @@ function create() {
   this.tweens.add({
     targets: spaceCollapse,
     loop: -1,
-    x: { value: 48, duration: 2000, ease: 'Quad.easeInOut', yoyo: true},
-    angle: {value: 2, duration: 1800, ease: 'Quad.easeInOut', yoyo: true},
-    alpha: {value: 0.3, duration: 1600,ease: 'Quad.easeInOut', yoyo: true}
-  })
+    x: {
+      value: 48, duration: 2000, ease: 'Quad.easeInOut', yoyo: true
+    },
+    angle: {
+      value: 2, duration: 1800, ease: 'Quad.easeInOut', yoyo: true
+    },
+    alpha: {
+      value: 0.3, duration: 1600, ease: 'Quad.easeInOut', yoyo: true
+    }
+  });
 
   this.tweens.add({
     targets: spaceCollapseBack,
     loop: -1,
-    x: { value: 48, duration: 1500, ease: 'Quad.easeInOut', yoyo: true},
-    angle: {value: -4, duration: 1300, ease: 'Quad.easeInOut', yoyo: true},
-    alpha: {value: 1, duration: 1600,ease: 'Quad.easeInOut', yoyo: true}
-  })
+    x: {
+      value: 48, duration: 1500, ease: 'Quad.easeInOut', yoyo: true
+    },
+    angle: {
+      value: -4, duration: 1300, ease: 'Quad.easeInOut', yoyo: true
+    },
+    alpha: {
+      value: 1, duration: 1600, ease: 'Quad.easeInOut', yoyo: true
+    }
+  });
 
   rene = this.physics.add.image(100, 300, 'rene');
   setReneConfig();
@@ -166,7 +176,7 @@ function create() {
   this.physics.add.overlap(rene, bonuses, (ren, bon) => {
     if (ren.inventory.length < 3) {
       if (!this.tweens.isTweening(ren)) {
-        const tween = this.tweens.add({
+        this.tweens.add({
           targets: ren,
           ease: t => --t * t * ((5 + 1) * t + 5) + 1,
           duration: 400,
@@ -211,7 +221,7 @@ function update() {
     if (rene.inventory.length > 0) {
       if (!this.tweens.isTweening(rene)) {
         const shot = rene.inventory.shift();
-        const tween = this.tweens.add({
+        this.tweens.add({
           targets: rene,
           ease: t => --t * t * ((5 + 1) * t + 5) + 1,
           duration: 400,
@@ -224,7 +234,7 @@ function update() {
     }
   }
 
-  score++;
+  score += 1;
   scoreText.setText(`Score: ${score}`);
 
   if (rene.isDead) {
@@ -307,13 +317,13 @@ function spawnObjects() {
   spawnCount += 1;
   difficulty += 1;
 
-  pickSpawn.bind(this)(spawnCount/100);
+  pickSpawn.bind(this)(spawnCount / 100);
   spawnEvent = this.time.addEvent({
     delay, callback: spawnObjects, callbackScope: this
   });
-  console.log('meteor:', meteors[0], meteors.length)
+  console.log('meteor:', meteors[0], meteors.length);
 
-  while(meteors[0] && !meteors[0].active) {
+  while (meteors[0] && !meteors[0].active) {
     meteors.shift();
   }
 }
@@ -321,7 +331,7 @@ function spawnObjects() {
 function pickSpawn(diff) {
   const trueDifficulty = Math.tanh(diff);
 
-  const pickBall = 1// (Math.random()*trueDifficulty) > 0.2;
+  const pickBall = 1;// (Math.random()*trueDifficulty) > 0.2;
 
   if (pickBall) {
     spawnBalls.bind(this)(trueDifficulty);
@@ -329,20 +339,20 @@ function pickSpawn(diff) {
     spawnMeteors.bind(this)(trueDifficulty);
   }
 
-  console.log('difficulty:',diff, Math.tanh(diff));
+  console.log('difficulty:', diff, Math.tanh(diff));
 }
 
 function spawnBalls(trueDifficulty) {
-  const ballNumber = 1; //Math.ceil(trueDifficulty * Math.random() * 3)
+  const ballNumber = 1; // Math.ceil(trueDifficulty * Math.random() * 3)
 
-  if(ballNumber === 1) {
+  if (ballNumber === 1) {
     let indestructiball;
     const ballPattern = trueDifficulty * Math.random();
-    if(ballPattern < 0.33) {
+    if (ballPattern < 0.33) {
       indestructiball = this.physics.add.image(1300, (Math.random() * 300) + 150, 'indestructiball');
-    } else if( ballPattern < 0.66) {
+    } else if (ballPattern < 0.66) {
       const isHigh = Math.random() > 0.5;
-      if(isHigh) {
+      if (isHigh) {
         indestructiball = this.physics.add.image(1300, 48, 'indestructiball');
       } else {
         indestructiball = this.physics.add.image(1300, 552, 'indestructiball');
@@ -358,22 +368,21 @@ function spawnBalls(trueDifficulty) {
 
     this.physics.add.collider(rene, indestructiball, () => {
       this.cameras.main.shake(100, 0.002);
-      if(!reneOuilleSound.isPlaying) {
+      if (!reneOuilleSound.isPlaying) {
         reneOuilleSound.play();
       }
     });
-      
-  } else if(ballNumber === 2) {
-    
+  } else if (ballNumber === 2) {
+
   }
 }
 
-function spawnMeteors(difficulty) {
-  const meteorNumber = Math.ceil(Math.random() * difficulty);
-  let randomScale = 1 + (Math.random() * difficulty * 4);
+function spawnMeteors(trueDifficulty) {
+  const meteorNumber = Math.ceil(Math.random() * trueDifficulty);
+  let randomScale = 1 + (Math.random() * trueDifficulty * 4);
   const randomXVelocity = -(20 + (Math.random() * 50));
   const randomYVelocity = (Math.random() - 0.5) * 600;
-  console.log('scale:',randomScale)
+  console.log('scale:', randomScale);
   if (randomScale > 5) {
     randomScale = 5;
   }
@@ -393,7 +402,7 @@ function spawnMeteors(difficulty) {
 
   this.physics.add.collider(rene, meteor, () => {
     this.cameras.main.shake(100, 0.002);
-    if(!reneOuilleSound.isPlaying) {
+    if (!reneOuilleSound.isPlaying) {
       reneOuilleSound.play();
     }
   });
@@ -406,7 +415,7 @@ function destroyMeteor(meteor) {
     targets: meteorBoom,
     alpha: { value: 0, duration: 1000, ease: 'Quad.easeOut' },
     onComplete: ({ targets }) => targets[0].destroy()
-  })
+  });
   meteor.destroy();
 }
 
@@ -428,7 +437,7 @@ function createParticles(particle) {
 }
 
 function updateInventoryDisplay() {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i += 1) {
     if (!rene.inventory[i]) {
       itemImages.getChildren()[i].setFrame(0);
     } else {
@@ -447,15 +456,14 @@ function shoot(type, size) {
       shot.body.allowGravity = false;
       renePewSound.play();
       this.physics.add.overlap(shot, meteors, (sho, met) => {
-        
         sho.destroy();
         destroyMeteor.bind(this)(met);
         objectBoomSound.play();
-        
+
         addScore(1000);
       });
 
-      this.physics.add.overlap(shot, indestructiballs, sho => {
+      this.physics.add.overlap(shot, indestructiballs, (sho) => {
         sho.destroy();
         indestructitingSound.play();
       });
@@ -511,7 +519,6 @@ function shoot(type, size) {
       this.physics.add.overlap(lazor, indestructiballs, () => {
         indestructitingSound.play();
       });
-
     }
   } else if (type === 'time') {
     if (size === 1) {
