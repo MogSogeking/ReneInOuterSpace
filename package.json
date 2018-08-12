@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.html",
   "scripts": {
+    "prestart": "yarn",
     "start": "serve"
   },
   "repository": {
