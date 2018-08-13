@@ -401,8 +401,6 @@ function spawnObjects() {
   spawnEvent = this.time.addEvent({
     delay, callback: spawnObjects, callbackScope: this
   });
-  console.log('meteor:', meteors[0], meteors.length);
-
   while (meteors[0] && !meteors[0].active) {
     meteors.shift();
   }
@@ -433,8 +431,6 @@ function pickSpawn(diff) {
   } else {
     spawnMeteors.bind(this)(trueDifficulty);
   }
-
-  console.log('difficulty:', diff, Math.tanh(diff));
 }
 
 function ballCollide() {
