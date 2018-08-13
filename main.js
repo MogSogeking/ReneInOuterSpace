@@ -324,32 +324,34 @@ function setReneConfig() {
 }
 
 function movingRene() {
-  if (rene.state !== 'spinMedium') {
-    rene.setMaxVelocity(500 * (1 + (rene.scaleX - 1) / 2), 500 * (1 + (rene.scaleY - 1) / 2));
-    rene.setAccelerationX((keys.D.isDown - keys.Q.isDown) * 1000);
-    rene.setAccelerationY((keys.S.isDown - keys.Z.isDown) * 1000);
-  }
-
-  if (rene.state === 'chill') {
-    if (keys.S.isDown || keys.D.isDown || keys.Q.isDown || keys.Z.isDown) {
-      rene.setAngularVelocity(360);
-    } else {
-      rene.setAngularVelocity(120);
-    }
-  }
-
-  if (rene.x > 1200) {
+  if (!rene.isDead) {
     if (rene.state !== 'spinMedium') {
-      rene.setVelocityX(-rene.body.velocity.x);
-      rene.setAccelerationX(-1000);
-    } else {
-      rene.x = 1200;
-      rene.setVelocityX(0);
-      rene.setAccelerationX(0);
+      rene.setMaxVelocity(500 * (1 + (rene.scaleX - 1) / 2), 500 * (1 + (rene.scaleY - 1) / 2));
+      rene.setAccelerationX((keys.D.isDown - keys.Q.isDown) * 1000);
+      rene.setAccelerationY((keys.S.isDown - keys.Z.isDown) * 1000);
     }
-  }
-  if (rene.x < -rene.width * rene.scaleX) {
-    rene.isDead = true;
+
+    if (rene.state === 'chill') {
+      if (keys.S.isDown || keys.D.isDown || keys.Q.isDown || keys.Z.isDown) {
+        rene.setAngularVelocity(360);
+      } else {
+        rene.setAngularVelocity(120);
+      }
+    }
+
+    if (rene.x > 1200) {
+      if (rene.state !== 'spinMedium') {
+        rene.setVelocityX(-rene.body.velocity.x);
+        rene.setAccelerationX(-1000);
+      } else {
+        rene.x = 1200;
+        rene.setVelocityX(0);
+        rene.setAccelerationX(0);
+      }
+    }
+    if (rene.x < -rene.width * rene.scaleX) {
+      rene.isDead = true;
+    }
   }
 }
 
@@ -380,11 +382,6 @@ function spawnBonus() {
     bonus.tintColor = 0x888888;
     bonus.setTint(bonus.tintColor);
   }
-
-  bonus = this.physics.add.image(1500, 300, 'bonus');
-  bonus.type = 'spin';
-  bonus.tintColor = 0xff00ff;
-  bonus.setTint(bonus.tintColor);
 
   bonus.setBounce(1, 1)
     .setAngularVelocity(300)
