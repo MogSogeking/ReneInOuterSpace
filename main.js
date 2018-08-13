@@ -78,6 +78,7 @@ function preload() {
   this.load.image('indestructiball', 'assets/indestructiball.png');
   this.load.image('bonusDeath', 'assets/bonusDeath.png');
   this.load.image('trackerBall', 'assets/trackerBall.png');
+  this.load.image('reneSpin', 'assets/reneSpin.png');
 
   this.load.audio('reneOuille', 'sounds/reneOuille.mp3');
   this.load.audio('reneBonus', 'sounds/reneBonus.mp3');
@@ -185,7 +186,7 @@ function create() {
   });
 
   rene = this.physics.add.image(100, 300, 'rene');
-  setReneConfig();
+  setReneConfig.bind(this)();
 
   spawnEvent = this.time.addEvent({
     delay, callback: spawnObjects, callbackScope: this
@@ -306,21 +307,46 @@ function setReneConfig() {
   rene.inventory = [];
   rene.isDead = false;
   rene.setGravityX(-200);
+  rene.state = 'chill';
+  rene.setChillState = () => {
+    rene.setTexture('rene');
+    rene.state = 'chill';
+    rene.setAngularAcceleration(0)
+      .setAngularVelocity(120)
+      .setImmovable(false);
+  };
+  rene.setSpinState = (strength) => {
+    rene.setAngularAcceleration(3000);
+    rene.state = `spin${strength}`;
+    rene.setTexture('reneSpin');
+    reneSpinSound.play();
+  };
 }
 
 function movingRene() {
-  rene.setMaxVelocity(500 * (1 + (rene.scaleX - 1) / 2), 500 * (1 + (rene.scaleY - 1) / 2));
-  rene.setAccelerationX((keys.D.isDown - keys.Q.isDown) * 1000);
-  rene.setAccelerationY((keys.S.isDown - keys.Z.isDown) * 1000);
-  if (keys.S.isDown || keys.D.isDown || keys.Q.isDown || keys.Z.isDown) {
-    rene.setAngularVelocity(360);
-  } else {
-    rene.setAngularVelocity(120);
+  if (rene.state !== 'spinMedium') {
+    rene.setMaxVelocity(500 * (1 + (rene.scaleX - 1) / 2), 500 * (1 + (rene.scaleY - 1) / 2));
+    rene.setAccelerationX((keys.D.isDown - keys.Q.isDown) * 1000);
+    rene.setAccelerationY((keys.S.isDown - keys.Z.isDown) * 1000);
+  }
+
+  if (rene.state === 'chill') {
+    if (keys.S.isDown || keys.D.isDown || keys.Q.isDown || keys.Z.isDown) {
+      rene.setAngularVelocity(360);
+    } else {
+      rene.setAngularVelocity(120);
+    }
   }
 
   if (rene.x > 1200) {
-    rene.setVelocityX(-rene.body.velocity.x * 5);
-    rene.setAccelerationX(-1000);
+    if (rene.state !== 'spinMedium') {
+      rene.setVelocityX(-rene.body.velocity.x);
+      rene.setAccelerationX(-1000);
+    } else {
+      rene.x = 1200;
+      rene.setVelocityX(0);
+      rene.setAccelerationX(0);
+    }
   }
   if (rene.x < -rene.width * rene.scaleX) {
     rene.isDead = true;
@@ -354,6 +380,11 @@ function spawnBonus() {
     bonus.tintColor = 0x888888;
     bonus.setTint(bonus.tintColor);
   }
+
+  bonus = this.physics.add.image(1500, 300, 'bonus');
+  bonus.type = 'spin';
+  bonus.tintColor = 0xff00ff;
+  bonus.setTint(bonus.tintColor);
 
   bonus.setBounce(1, 1)
     .setAngularVelocity(300)
@@ -409,6 +440,37 @@ function pickSpawn(diff) {
   console.log('difficulty:', diff, Math.tanh(diff));
 }
 
+function ballCollide() {
+  this.cameras.main.shake(100, 0.002);
+
+  if (rene.state !== 'chill') {
+    if (!indestructitingSound.isPlaying) {
+      indestructitingSound.play();
+    }
+    if (rene.state === 'spinLight') {
+      rene.setChillState();
+    }
+  } else if (!reneOuilleSound.isPlaying) {
+    reneOuilleSound.play();
+  }
+}
+
+function meteorCollide(met) {
+  this.cameras.main.shake(100, 0.002);
+
+  if (rene.state !== 'chill') {
+    if (!objectBoomSound.isPlaying) {
+      objectBoomSound.play();
+    }
+    if (rene.state === 'spinLight') {
+      rene.setChillState();
+    }
+    destroyMeteor.bind(this)(met);
+  } else if (!reneOuilleSound.isPlaying) {
+    reneOuilleSound.play();
+  }
+}
+
 function spawnTrackerBall(trueDifficulty) {
   const randomXVelocity = -trueDifficulty * 100;
   const trackerBall = this.physics.add.image(1300, rene.y, 'trackerBall');
@@ -418,26 +480,12 @@ function spawnTrackerBall(trueDifficulty) {
   trackerBall.setImmovable()
     .setVelocityX(randomXVelocity);
 
-  const collide = () => {
-    this.cameras.main.shake(100, 0.002);
-    if (!reneOuilleSound.isPlaying) {
-      reneOuilleSound.play();
-    }
-  };
-
-  this.physics.add.collider(rene, trackerBall, collide);
+  this.physics.add.collider(rene, trackerBall, ballCollide.bind(this));
 }
 
 function spawnBalls(trueDifficulty) {
   const ballNumber = Math.ceil(trueDifficulty * Math.random() * 3);
   const randomVelocity = -(50 + (Math.random() * 150));
-
-  const collide = () => {
-    this.cameras.main.shake(100, 0.002);
-    if (!reneOuilleSound.isPlaying) {
-      reneOuilleSound.play();
-    }
-  };
 
   if (ballNumber === 1) {
     let indestructiball;
@@ -460,7 +508,7 @@ function spawnBalls(trueDifficulty) {
     indestructiball.setImmovable()
       .setVelocityX(randomVelocity);
 
-    this.physics.add.collider(rene, indestructiball, collide);
+    this.physics.add.collider(rene, indestructiball, ballCollide.bind(this));
   } else if (ballNumber === 2) {
     const indestructiballz = [];
     const ballPattern = Math.random();
@@ -481,7 +529,7 @@ function spawnBalls(trueDifficulty) {
       indestructiballz[i].setImmovable()
         .setVelocityX(randomVelocity);
 
-      this.physics.add.collider(rene, indestructiballz[i], collide);
+      this.physics.add.collider(rene, indestructiballz[i], ballCollide.bind(this));
     }
   } else {
     const indestructiballz = [];
@@ -502,20 +550,13 @@ function spawnBalls(trueDifficulty) {
       indestructiballz[i].setImmovable()
         .setVelocityX(randomVelocity);
 
-      this.physics.add.collider(rene, indestructiballz[i], collide);
+      this.physics.add.collider(rene, indestructiballz[i], ballCollide.bind(this));
     }
   }
 }
 
 function spawnMeteors(trueDifficulty) {
   const meteorNumber = Math.ceil(Math.random() * trueDifficulty * 3);
-
-  const collide = () => {
-    this.cameras.main.shake(100, 0.002);
-    if (!reneOuilleSound.isPlaying) {
-      reneOuilleSound.play();
-    }
-  };
 
   for (let i = 0; i < meteorNumber; i += 1) {
     let randomScale = 1 + (Math.random() * trueDifficulty * 4);
@@ -536,18 +577,11 @@ function spawnMeteors(trueDifficulty) {
     meteor.setGravityX(-100 / meteor.scaleX);
 
     meteors.push(meteor);
-    this.physics.add.collider(rene, meteor, collide);
+    this.physics.add.collider(rene, meteor, meteorCollide.bind(this, meteor));
   }
 }
 
 function spawnMeteorField() {
-  const collide = () => {
-    this.cameras.main.shake(100, 0.002);
-    if (!reneOuilleSound.isPlaying) {
-      reneOuilleSound.play();
-    }
-  };
-
   const prepareMeteor = (meteor) => {
     meteor.setBounce(1, 1)
       .setAngularVelocity(20)
@@ -557,7 +591,7 @@ function spawnMeteorField() {
     meteor.setGravityX(-10);
 
     meteors.push(meteor);
-    this.physics.add.collider(rene, meteor, collide);
+    this.physics.add.collider(rene, meteor, meteorCollide.bind(this, meteor));
   };
 
   const randomXVelocity = -(32 + (Math.random() * 64));
@@ -594,6 +628,8 @@ function destroyMeteor(meteor) {
     onComplete: ({ targets }) => targets[0].destroy()
   });
   meteor.destroy();
+  objectBoomSound.play();
+  addScore.bind(this)(1000);
 }
 
 function createParticles(particle) {
@@ -635,9 +671,6 @@ function shoot(type, size) {
       this.physics.add.overlap(shot, meteors, (sho, met) => {
         sho.destroy();
         destroyMeteor.bind(this)(met);
-        objectBoomSound.play();
-
-        addScore.bind(this)(1000);
       });
 
       this.physics.add.overlap(shot, indestructiballs, (sho) => {
@@ -679,8 +712,6 @@ function shoot(type, size) {
       this.physics.add.overlap(shots, meteors, (met, sho) => {
         sho.destroy();
         destroyMeteor.bind(this)(met);
-        objectBoomSound.play();
-        addScore.bind(this)(1000);
       });
       this.physics.add.overlap(shots, indestructiballs, (ball, sho) => {
         sho.destroy();
@@ -707,8 +738,6 @@ function shoot(type, size) {
       this.cameras.main.shake(250, 0.02);
       this.physics.add.overlap(lazor, meteors, (laz, met) => {
         destroyMeteor.bind(this)(met);
-        objectBoomSound.play();
-        addScore.bind(this)(1000);
       });
       this.physics.add.overlap(lazor, indestructiballs, () => {
         if (!indestructitingSound.isPlaying) {
@@ -781,11 +810,30 @@ function shoot(type, size) {
     }
   } else if (type === 'spin') {
     if (size === 1) {
-      reneSpinSound.play();
+      rene.setSpinState('Light');
     } else if (size === 2) {
-      reneSpinSound.play();
+      rene.setSpinState('Medium');
+      rene.setImmovable();
+      rene.setMaxVelocity(2000);
+      rene.setAccelerationX(5000);
+      rene.setVelocityX(2000);
+      this.time.addEvent({
+        delay: 1000,
+        callback: () => {
+          rene.setChillState();
+        },
+        callbackScope: this
+      });
     } else {
-      reneSpinSound.play();
+      rene.setSpinState('Heavy');
+      rene.setImmovable();
+      this.time.addEvent({
+        delay: 4000,
+        callback: () => {
+          rene.setChillState();
+        },
+        callbackScope: this
+      });
     }
   }
 }
