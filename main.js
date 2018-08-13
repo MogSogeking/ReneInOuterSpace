@@ -55,10 +55,11 @@ let renePewSound;
 let reneDeathSound;
 let objectBoomSound;
 let indestructitingSound;
-let smallBurp;
-let mediumBurp;
-let bigBurp;
-let watch;
+let smallBurpSound;
+let mediumBurpSound;
+let bigBurpSound;
+let watchSound;
+let bonusDeathSound;
 let bgm;
 
 function preload() {
@@ -72,6 +73,7 @@ function preload() {
   this.load.image('slot', 'assets/slot.png');
   this.load.image('lazor', 'assets/lazor.png');
   this.load.image('indestructiball', 'assets/indestructiball.png');
+  this.load.image('bonusDeath', 'assets/bonusDeath.png');
 
   this.load.audio('reneOuille', 'sounds/reneOuille.mp3');
   this.load.audio('reneBonus', 'sounds/reneBonus.mp3');
@@ -84,6 +86,7 @@ function preload() {
   this.load.audio('mediumBurp', 'sounds/mediumBurp.mp3');
   this.load.audio('bigBurp', 'sounds/bigBurp.mp3');
   this.load.audio('watch', 'sounds/watch.mp3');
+  this.load.audio('bonusDeath', 'sounds/bonusDeath.mp3');
   this.load.audio('bgm', 'sounds/bgm.mp3');
 }
 
@@ -95,10 +98,11 @@ function create() {
   reneDeathSound = this.sound.add('reneDeath');
   objectBoomSound = this.sound.add('objectBoom');
   indestructitingSound = this.sound.add('indestructiting');
-  smallBurp = this.sound.add('smallBurp');
-  mediumBurp = this.sound.add('mediumBurp');
-  bigBurp = this.sound.add('bigBurp');
-  watch = this.sound.add('watch');
+  smallBurpSound = this.sound.add('smallBurp');
+  mediumBurpSound = this.sound.add('mediumBurp');
+  bigBurpSound = this.sound.add('bigBurp');
+  watchSound = this.sound.add('watch');
+  bonusDeathSound = this.sound.add('bonusDeath');
   bgm = this.sound.add('bgm');
   bgm.setLoop(true);
   bgm.play();
@@ -228,6 +232,22 @@ function update() {
       ball.destroy();
     }
   });
+  bonuses.forEach((bon) => {
+    if (bon.x < -bon.width) {
+      const bonusDeath = this.add.image(32, bon.y, 'bonusDeath');
+      bonusDeath.setTint(bon.tintBottomLeft);
+      this.tweens.add({
+        targets: bonusDeath,
+        alpha: { value: 0, duration: 1000, ease: 'Quad.easeOut', },
+        onComplete: ({ targets }) => targets[0].destroy()
+      });
+      bon.destroy();
+      spawnCount += 20;
+      bonusDeathSound.play();
+      bon.x = 500;
+      // this.cameras.main.shake(200, 0.01);
+    }
+  });
 
   if (Phaser.Input.Keyboard.JustDown(space)) {
     if (rene.inventory.length > 0) {
@@ -337,6 +357,12 @@ function spawnObjects() {
 
   while (meteors[0] && !meteors[0].active) {
     meteors.shift();
+  }
+  while (indestructiballs[0] && !indestructiballs[0].active) {
+    indestructiballs.shift();
+  }
+  while (bonuses[0] && !bonuses[0].active) {
+    bonuses.shift();
   }
 }
 
@@ -602,7 +628,7 @@ function shoot(type, size) {
           });
         }
       });
-      watch.play();
+      watchSound.play();
     } else if (size === 2) {
       meteors.forEach((meteor) => {
         if (meteor.body) {
@@ -625,21 +651,21 @@ function shoot(type, size) {
           callbackScope: this
         });
       });
-      watch.play();
+      watchSound.play();
     } else {
       difficulty = 1;
       delay = 5000;
-      watch.play();
+      watchSound.play();
     }
   } else if (type === 'gaz') {
     if (size === 1) {
-      smallBurp.play();
+      smallBurpSound.play();
       this.cameras.main.shake(100, 0.002);
     } else if (size === 2) {
-      mediumBurp.play();
+      mediumBurpSound.play();
       this.cameras.main.shake(150, 0.004);
     } else {
-      bigBurp.play();
+      bigBurpSound.play();
       this.cameras.main.shake(200, 0.01);
     }
   }
