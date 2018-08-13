@@ -30,6 +30,24 @@ const items = {
   spin: 4,
 };
 
+const keyboardConfig = {
+  qwerty: {
+    up: 'W',
+    left: 'A',
+    down: 'S',
+    right: 'D',
+  },
+  azerty: {
+    up: 'Z',
+    left: 'Q',
+    down: 'S',
+    right: 'D',
+  }
+};
+
+let directions = keyboardConfig.qwerty;
+let previousConfig = 'qwerty';
+
 let rene;
 const meteors = [];
 const bonuses = [];
@@ -37,6 +55,7 @@ const indestructiballs = [];
 const trackerBalls = [];
 let spaceCollapse;
 let spaceCollapseBack;
+let qwertyButton;
 
 let delay = 5000;
 let spawnEvent;
@@ -79,6 +98,7 @@ function preload() {
   this.load.image('bonusDeath', 'assets/bonusDeath.png');
   this.load.image('trackerBall', 'assets/trackerBall.png');
   this.load.image('reneSpin', 'assets/reneSpin.png');
+  this.load.spritesheet('keyboard', 'assets/keyboard.png', { frameWidth: 55, frameHeight: 21 });
 
   this.load.audio('reneOuille', 'sounds/reneOuille.mp3');
   this.load.audio('reneBonus', 'sounds/reneBonus.mp3');
@@ -116,7 +136,7 @@ function create() {
 
   this.sound.override = false;
 
-  keys = this.input.keyboard.addKeys('Z,Q,S,D');
+  keys = this.input.keyboard.addKeys('Z,Q,S,D,W,A');
   space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   this.physics.world.checkCollision.left = false;
   this.physics.world.checkCollision.right = false;
@@ -149,6 +169,7 @@ function create() {
 
   spaceCollapse = this.add.image(0, 300, 'spaceCollapse').setAngle(-2);
   spaceCollapseBack = this.add.image(0, 300, 'spaceCollapse').setAlpha(0.3);
+
 
   slots.setDepth(1);
   itemImages.setDepth(1);
@@ -183,6 +204,28 @@ function create() {
     alpha: {
       value: 1, duration: 1600, ease: 'Quad.easeInOut', yoyo: true
     }
+  });
+
+  qwertyButton = {
+    keyboard: this.add.image(384, 32, 'keyboard', 0).setInteractive(),
+    text: this.add.text(356, 48, previousConfig),
+    state: previousConfig,
+    toggleState: () => {
+      qwertyButton.state = qwertyButton.state === 'qwerty' ? 'azerty' : 'qwerty';
+      directions = keyboardConfig[qwertyButton.state];
+      qwertyButton.text.setText(qwertyButton.state);
+      previousConfig = qwertyButton.state;
+    }
+  };
+
+  qwertyButton.keyboard.on('pointerover', (pointer, muteButton) => {
+    qwertyButton.keyboard.setFrame(1);
+  });
+  qwertyButton.keyboard.on('pointerout', (pointer, muteButton) => {
+    qwertyButton.keyboard.setFrame(0);
+  });
+  qwertyButton.keyboard.on('pointerdown', (pointer, key) => {
+    qwertyButton.toggleState();
   });
 
   rene = this.physics.add.image(100, 300, 'rene');
@@ -327,12 +370,15 @@ function movingRene() {
   if (!rene.isDead) {
     if (rene.state !== 'spinMedium') {
       rene.setMaxVelocity(500 * (1 + (rene.scaleX - 1) / 2), 500 * (1 + (rene.scaleY - 1) / 2));
-      rene.setAccelerationX((keys.D.isDown - keys.Q.isDown) * 1000);
-      rene.setAccelerationY((keys.S.isDown - keys.Z.isDown) * 1000);
+      rene.setAccelerationX((keys[directions.right].isDown - keys[directions.left].isDown) * 1000);
+      rene.setAccelerationY((keys[directions.down].isDown - keys[directions.up].isDown) * 1000);
     }
 
     if (rene.state === 'chill') {
-      if (keys.S.isDown || keys.D.isDown || keys.Q.isDown || keys.Z.isDown) {
+      if (keys[directions.down].isDown
+          || keys[directions.right].isDown
+          || keys[directions.left].isDown
+          || keys[directions.up].isDown) {
         rene.setAngularVelocity(360);
       } else {
         rene.setAngularVelocity(120);
