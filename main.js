@@ -172,6 +172,10 @@ function create() {
       x: 784,
       y: 96,
       stepX: 160,
+    },
+    setScale: {
+      x: 0,
+      y: 0
     }
   });
 
@@ -273,7 +277,7 @@ function create() {
         ren.inventory.push(bon.type);
         bon.destroy();
         reneBonusSound.play();
-        updateInventoryDisplay();
+        updateInventoryDisplay.bind(this)();
         score += 1000;
         if (!this.tweens.isTweening(scoreText)) {
           this.tweens.add(({
@@ -337,7 +341,7 @@ function update() {
           scaleX: rene.scaleX - 1,
           scaleY: rene.scaleY - 1
         });
-        updateInventoryDisplay();
+        updateInventoryDisplay.bind(this)();
         shoot.bind(this)(shot, rene.inventory.length + 1);
       }
     }
@@ -711,11 +715,19 @@ function createParticles(particle) {
 
 function updateInventoryDisplay() {
   for (let i = 0; i < 3; i += 1) {
+    const itemImage = itemImages.getChildren()[i];
     if (!rene.inventory[i]) {
-      itemImages.getChildren()[i].setFrame(0);
+      itemImage.setFrame(0);
     } else {
-      itemImages.getChildren()[i].setFrame(items[rene.inventory[i]]);
+      itemImage.setFrame(items[rene.inventory[i]]);
     }
+    this.tweens.add({
+      targets: itemImage,
+      ease: t => --t * t * ((5 + 1) * t + 5) + 1,
+      duration: 400,
+      scaleX: (rene.inventory.length - i) / 3,
+      scaleY: (rene.inventory.length - i) / 3,
+    });
   }
 }
 
