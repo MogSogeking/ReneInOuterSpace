@@ -369,9 +369,12 @@ function spawnObjects() {
 function pickSpawn(diff) {
   const trueDifficulty = Math.tanh(diff);
 
+  const pickMeteorField = (Math.random() * trueDifficulty) > 0.95;
   const pickBall = (Math.random() > 0.7 && trueDifficulty > 0.2);
 
-  if (pickBall) {
+  if (pickMeteorField) {
+    spawnMeteorField.bind(this)(trueDifficulty);
+  } else if (pickBall) {
     spawnBalls.bind(this)(trueDifficulty);
   } else {
     spawnMeteors.bind(this)(trueDifficulty);
@@ -489,6 +492,51 @@ function spawnMeteors(trueDifficulty) {
 
     meteors.push(meteor);
     this.physics.add.collider(rene, meteor, collide);
+  }
+}
+
+function spawnMeteorField() {
+  const collide = () => {
+    this.cameras.main.shake(100, 0.002);
+    if (!reneOuilleSound.isPlaying) {
+      reneOuilleSound.play();
+    }
+  };
+
+  const prepareMeteor = (meteor) => {
+    meteor.setBounce(1, 1)
+      .setAngularVelocity(20)
+      .setVelocity(randomXVelocity, 0)
+      .setImmovable()
+      .setSize(48, 48);
+    meteor.setGravityX(-10);
+
+    meteors.push(meteor);
+    this.physics.add.collider(rene, meteor, collide);
+  };
+
+  const randomXVelocity = 32 + (Math.random() * 64);
+
+  for (let i = 0; i < 9; i += 1) {
+    const randomX = (Math.random() - 0.5) * 64;
+    const randomY = (Math.random() - 0.5) * 64;
+    const randomScale = 0.5 + Math.random();
+
+    const meteor = this.physics.add.image(randomX + 1300 + (Math.floor(i / 3) * 256), randomY + 64 + ((i % 3) * 236), 'meteor')
+      .setScale(randomScale, randomScale);
+
+    prepareMeteor(meteor);
+  }
+
+  for (let i = 0; i < 4; i += 1) {
+    const randomX = (Math.random() - 0.5) * 64;
+    const randomY = (Math.random() - 0.5) * 64;
+    const randomScale = 0.5 + Math.random();
+
+    const meteor = this.physics.add.image(randomX + 1300 + 128 + (Math.floor(i / 2) * 256), randomY + 64 + 118 + ((i % 2) * 236), 'meteor')
+      .setScale(randomScale, randomScale);
+
+    prepareMeteor(meteor);
   }
 }
 
