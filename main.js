@@ -62,6 +62,7 @@ let mediumBurpSound;
 let bigBurpSound;
 let watchSound;
 let bonusDeathSound;
+let reneSpinSound;
 let bgm;
 
 function preload() {
@@ -90,6 +91,7 @@ function preload() {
   this.load.audio('bigBurp', 'sounds/bigBurp.mp3');
   this.load.audio('watch', 'sounds/watch.mp3');
   this.load.audio('bonusDeath', 'sounds/bonusDeath.mp3');
+  this.load.audio('reneSpin', 'sounds/reneSpin.mp3');
   this.load.audio('bgm', 'sounds/bgm.mp3');
 }
 
@@ -106,6 +108,7 @@ function create() {
   bigBurpSound = this.sound.add('bigBurp');
   watchSound = this.sound.add('watch');
   bonusDeathSound = this.sound.add('bonusDeath');
+  reneSpinSound = this.sound.add('reneSpin');
   bgm = this.sound.add('bgm');
   bgm.setLoop(true);
   bgm.play();
@@ -778,11 +781,11 @@ function shoot(type, size) {
     }
   } else if (type === 'spin') {
     if (size === 1) {
-
+      reneSpinSound.play();
     } else if (size === 2) {
-
+      reneSpinSound.play();
     } else {
-
+      reneSpinSound.play();
     }
   }
 }
