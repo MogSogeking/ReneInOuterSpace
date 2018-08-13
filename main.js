@@ -33,6 +33,7 @@ let rene;
 const meteors = [];
 const bonuses = [];
 const indestructiballs = [];
+const trackerBalls = [];
 let spaceCollapse;
 let spaceCollapseBack;
 
@@ -74,6 +75,7 @@ function preload() {
   this.load.image('lazor', 'assets/lazor.png');
   this.load.image('indestructiball', 'assets/indestructiball.png');
   this.load.image('bonusDeath', 'assets/bonusDeath.png');
+  this.load.image('trackerBall', 'assets/trackerBall.png');
 
   this.load.audio('reneOuille', 'sounds/reneOuille.mp3');
   this.load.audio('reneBonus', 'sounds/reneBonus.mp3');
@@ -232,6 +234,12 @@ function update() {
       ball.destroy();
     }
   });
+  trackerBalls.forEach((ball) => {
+    ball.y -= Math.tanh((ball.y - rene.y) / 1000) * 150;
+    if (ball.x < -ball.width) {
+      ball.destroy();
+    }
+  });
   bonuses.forEach((bon) => {
     if (bon.x < -bon.width) {
       const bonusDeath = this.add.image(32, bon.y, 'bonusDeath');
@@ -307,7 +315,7 @@ function movingRene() {
   }
 
   if (rene.x > 1200) {
-    rene.setVelocityX(0);
+    rene.setVelocityX(-rene.body.velocity.x * 5);
     rene.setAccelerationX(-1000);
   }
   if (rene.x < -rene.width * rene.scaleX) {
@@ -364,16 +372,22 @@ function spawnObjects() {
   while (bonuses[0] && !bonuses[0].active) {
     bonuses.shift();
   }
+  while (trackerBalls[0] && !trackerBalls[0].active) {
+    trackerBalls.shift();
+  }
 }
 
 function pickSpawn(diff) {
   const trueDifficulty = Math.tanh(diff);
 
   const pickMeteorField = (Math.random() * trueDifficulty) > 0.95;
+  const pickTrackerball = (Math.random() > 0.9 && trueDifficulty > 0.5);
   const pickBall = (Math.random() > 0.7 && trueDifficulty > 0.2);
 
   if (pickMeteorField) {
     spawnMeteorField.bind(this)(trueDifficulty);
+  } else if (pickTrackerball) {
+    spawnTrackerBall.bind(this)(trueDifficulty);
   } else if (pickBall) {
     spawnBalls.bind(this)(trueDifficulty);
   } else {
@@ -381,6 +395,25 @@ function pickSpawn(diff) {
   }
 
   console.log('difficulty:', diff, Math.tanh(diff));
+}
+
+function spawnTrackerBall(trueDifficulty) {
+  const randomXVelocity = -trueDifficulty * 100;
+  const trackerBall = this.physics.add.image(1300, rene.y, 'trackerBall');
+  trackerBalls.push(trackerBall);
+
+  trackerBall.body.setAllowGravity(false);
+  trackerBall.setImmovable()
+    .setVelocityX(randomXVelocity);
+
+  const collide = () => {
+    this.cameras.main.shake(100, 0.002);
+    if (!reneOuilleSound.isPlaying) {
+      reneOuilleSound.play();
+    }
+  };
+
+  this.physics.add.collider(rene, trackerBall, collide);
 }
 
 function spawnBalls(trueDifficulty) {
@@ -515,7 +548,7 @@ function spawnMeteorField() {
     this.physics.add.collider(rene, meteor, collide);
   };
 
-  const randomXVelocity = 32 + (Math.random() * 64);
+  const randomXVelocity = -(32 + (Math.random() * 64));
 
   for (let i = 0; i < 9; i += 1) {
     const randomX = (Math.random() - 0.5) * 64;
@@ -601,6 +634,13 @@ function shoot(type, size) {
           indestructitingSound.play();
         }
       });
+
+      this.physics.add.overlap(shot, trackerBalls, (sho) => {
+        sho.destroy();
+        if (!indestructitingSound.isPlaying) {
+          indestructitingSound.play();
+        }
+      });
     } else if (size === 2) {
       const shots = this.physics.add.group({
         key: 'power',
@@ -636,6 +676,12 @@ function shoot(type, size) {
           indestructitingSound.play();
         }
       });
+      this.physics.add.overlap(shots, trackerBalls, (ball, sho) => {
+        sho.destroy();
+        if (!indestructitingSound.isPlaying) {
+          indestructitingSound.play();
+        }
+      });
     } else {
       const lazor = this.physics.add.image(rene.x + 600, rene.y, 'lazor');
       lazor.body.allowGravity = false;
@@ -653,6 +699,11 @@ function shoot(type, size) {
         addScore.bind(this)(1000);
       });
       this.physics.add.overlap(lazor, indestructiballs, () => {
+        if (!indestructitingSound.isPlaying) {
+          indestructitingSound.play();
+        }
+      });
+      this.physics.add.overlap(lazor, trackerBalls, () => {
         if (!indestructitingSound.isPlaying) {
           indestructitingSound.play();
         }
