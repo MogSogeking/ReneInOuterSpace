@@ -8,9 +8,6 @@ const config = {
       // debug: true,
     },
   },
-  audio: {
-    override: false,
-  },
   scene: {
     preload,
     create,
@@ -48,6 +45,15 @@ const keyboardConfig = {
 let directions = keyboardConfig.qwerty;
 let previousConfig = 'qwerty';
 
+const muteState = {
+  frame: 0,
+  state: 'off',
+  toggleState: (context) => {
+    muteState.state = muteState.state === 'off' ? 'on' : 'off';
+    muteState.frame = muteState.state === 'off' ? 0 : 1;
+    context.sound.mute = !context.sound.mute;
+  }
+};
 let rene;
 const meteors = [];
 const bonuses = [];
@@ -56,6 +62,7 @@ const trackerBalls = [];
 let spaceCollapse;
 let spaceCollapseBack;
 let qwertyButton;
+let muteButton;
 
 let delay = 5000;
 let spawnEvent;
@@ -99,6 +106,7 @@ function preload() {
   this.load.image('trackerBall', 'assets/trackerBall.png');
   this.load.image('reneSpin', 'assets/reneSpin.png');
   this.load.spritesheet('keyboard', 'assets/keyboard.png', { frameWidth: 55, frameHeight: 21 });
+  this.load.spritesheet('mute', 'assets/mute.png', { frameWidth: 64, frameHeight: 64 });
 
   this.load.audio('reneOuille', 'sounds/reneOuille.mp3');
   this.load.audio('reneBonus', 'sounds/reneBonus.mp3');
@@ -208,7 +216,7 @@ function create() {
 
   qwertyButton = {
     keyboard: this.add.image(384, 32, 'keyboard', 0).setInteractive(),
-    text: this.add.text(356, 48, previousConfig),
+    text: this.add.text(356, 54, previousConfig),
     state: previousConfig,
     toggleState: () => {
       qwertyButton.state = qwertyButton.state === 'qwerty' ? 'azerty' : 'qwerty';
@@ -218,14 +226,27 @@ function create() {
     }
   };
 
-  qwertyButton.keyboard.on('pointerover', (pointer, muteButton) => {
+  qwertyButton.keyboard.on('pointerover', () => {
     qwertyButton.keyboard.setFrame(1);
   });
-  qwertyButton.keyboard.on('pointerout', (pointer, muteButton) => {
+  qwertyButton.keyboard.on('pointerout', () => {
     qwertyButton.keyboard.setFrame(0);
   });
-  qwertyButton.keyboard.on('pointerdown', (pointer, key) => {
+  qwertyButton.keyboard.on('pointerdown', () => {
     qwertyButton.toggleState();
+  });
+
+  muteButton = this.add.image(460, 48, 'mute', muteState.frame).setInteractive();
+
+  muteButton.on('pointerover', () => {
+    muteButton.setFrame(muteState.frame + 2);
+  });
+  muteButton.on('pointerout', () => {
+    muteButton.setFrame(muteState.frame);
+  });
+  muteButton.on('pointerdown', () => {
+    muteState.toggleState(this);
+    muteButton.setFrame(muteState.frame + 2);
   });
 
   rene = this.physics.add.image(100, 300, 'rene');
