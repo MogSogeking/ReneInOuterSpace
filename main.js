@@ -27,6 +27,7 @@ const items = {
   shot: 1,
   time: 2,
   gaz: 3,
+  spin: 4,
 };
 
 let rene;
@@ -243,7 +244,7 @@ function update() {
   bonuses.forEach((bon) => {
     if (bon.x < -bon.width) {
       const bonusDeath = this.add.image(32, bon.y, 'bonusDeath');
-      bonusDeath.setTint(bon.tintBottomLeft);
+      bonusDeath.setTint(bon.tintColor);
       this.tweens.add({
         targets: bonusDeath,
         alpha: { value: 0, duration: 1000, ease: 'Quad.easeOut', },
@@ -332,15 +333,23 @@ function spawnBonus() {
   if (randomBonus > 0.9) {
     bonus = this.physics.add.image(1500, 300, 'bonus');
     bonus.type = 'time';
-    bonus.setTint(0x0000ff);
+    bonus.tintColor = 0x0000ff;
+    bonus.setTint(bonus.tintColor);
   } else if (randomBonus > 0.7) {
     bonus = this.physics.add.image(1500, 300, 'bonus');
     bonus.type = 'shot';
-    bonus.setTint(0x00ff00);
+    bonus.tintColor = 0x00ff00;
+    bonus.setTint(bonus.tintColor);
+  } else if (randomBonus > 0.5) {
+    bonus = this.physics.add.image(1500, 300, 'bonus');
+    bonus.type = 'spin';
+    bonus.tintColor = 0xff00ff;
+    bonus.setTint(bonus.tintColor);
   } else {
     bonus = this.physics.add.image(1500, 300, 'bonus');
     bonus.type = 'gaz';
-    bonus.setTint(0x888888);
+    bonus.tintColor = 0x888888;
+    bonus.setTint(bonus.tintColor);
   }
 
   bonus.setBounce(1, 1)
@@ -766,6 +775,14 @@ function shoot(type, size) {
     } else {
       bigBurpSound.play();
       this.cameras.main.shake(200, 0.01);
+    }
+  } else if (type === 'spin') {
+    if (size === 1) {
+
+    } else if (size === 2) {
+
+    } else {
+
     }
   }
 }
